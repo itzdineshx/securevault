@@ -17,15 +17,6 @@ def configure_page():
         <style>
         /* Theme colors */
         :root {
-            /* Light Mode Defaults */
-            --primary-color-light: #1e3a8a; 
-            --secondary-color-light: #c81e1e;
-            --accent-color-light: #f59e0b;
-            --text-color-light: #111827; /* Ensure dark text for light bg */
-            --background-color-light: #ffffff; /* White background */
-            --card-background-light: #f9fafb; /* Slightly off-white cards */
-            --border-color-light: #e5e7eb;
-
             /* Dark Mode Overrides (applied via media query) */
             --primary-color-dark: #bfdbfe; /* Light blue for dark bg */
             --secondary-color-dark: #fda4af;
