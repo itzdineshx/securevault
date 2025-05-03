@@ -34,10 +34,6 @@ Upload your documents, get cryptographic hashes, and store them on a tamper-proo
 * ⚙️ **Real-time Feedback**: Spinners, success & error messages, and 🎉 balloons upon success!
 * 🌗 **Dark/Light Theme**: Toggle seamlessly with Streamlit's built-in theming.
 
-<p align="center">
-  <img src="https://media.giphy.com/media/3o7qDXJ6YaFP2Hl2vG/giphy.gif" alt="Blockchain" width="400"/>
-</p>
-
 ## 🛠️ Tech Stack
 
 * **Frontend**: Streamlit 🌐
@@ -112,25 +108,22 @@ streamlit run app.py
    * Click **🔄 Refresh Log** to see all blocks.
    * Explore the table for timestamps & hashes. 🔍
 
-<p align="center">
-  <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="Success" width="300"/>
-</p>
-
 ---
 
 ## 🗂️ Project Structure
 
 ```
-securevault/
-├── app.py               # 🖥️ Streamlit frontend
-├── backend/             # ⚙️ FastAPI backend
-│   ├── main.py
-│   ├── models.py
-│   ├── database.py
-│   └── requirements.txt
-├── requirements.txt     # 📦 Frontend dependencies
-├── README.md            # 📜 This file
-└── .gitignore           # 🚫 Ignored files
+└── securevault/
+    ├── README.md
+    ├── app.py
+    ├── main.py
+    ├── requirements.txt
+    ├── securevault.db
+    ├── test.txt
+    ├── test_upload.py
+    ├── ui_components.py
+    └── utils.py
+
 ```
 
 ---
