@@ -34,6 +34,8 @@ Upload your documents, get cryptographic hashes, and store them on a tamper-proo
 * ⚙️ **Real-time Feedback**: Spinners, success & error messages, and 🎉 balloons upon success!
 * 🌗 **Dark/Light Theme**: Toggle seamlessly with Streamlit's built-in theming.
 
+![Working of Blockchain](How_does_a_blockchain_work_Simply_Explained.gif)
+
 ## 🛠️ Tech Stack
 
 * **Frontend**: Streamlit 🌐
