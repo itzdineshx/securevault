@@ -93,15 +93,15 @@ def create_blockchain_graph(blocks):
 def fetch_and_display_blockchain_data():
     """Fetch blockchain data and display it as a graph and a table in tabs."""
     try:
-            with st.spinner("Fetching blockchain data..."):
+        with st.spinner("Fetching blockchain data..."):
             response = requests.get(f"{BACKEND_URL}/log/")
-            
+
             if response.status_code == 200:
                 blocks = response.json()
-                
+
                 if blocks:
                     tab1, tab2 = st.tabs(["📊 Visual Representation", "💾 Raw Data"])
-                    
+
                     with tab1:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
                         st.subheader("Blockchain Structure")
@@ -113,18 +113,17 @@ def fetch_and_display_blockchain_data():
                         except Exception as graph_err:
                             st.warning(f"Could not render graph. Graphviz might not be installed correctly. Error: {graph_err}")
                         st.markdown("</div>", unsafe_allow_html=True)
-                        
+
                     with tab2:
                         st.markdown("<div class='card'>", unsafe_allow_html=True)
                         st.subheader("Blockchain Data Table")
                         df = pd.DataFrame(blocks)
                         # Safely format timestamp in DataFrame
                         try:
-                           df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
+                            df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
                         except (ValueError, TypeError):
-                           st.warning("Could not format timestamp column correctly.")
-                           pass # Keep original timestamp if conversion fails
-                           
+                            st.warning("Could not format timestamp column correctly.")
+
                         st.dataframe(
                             df,
                             column_config={
@@ -148,8 +147,8 @@ def fetch_and_display_blockchain_data():
                 except requests.exceptions.JSONDecodeError:
                     error_detail = response.text
                 st.error(f"❌ Error fetching blockchain data: {error_detail}")
-    
+
     except RequestException as e:
         st.error(f"❌ Failed to connect to the server ({BACKEND_URL}). Please ensure it's running. Error: {str(e)}")
     except Exception as e:
-        st.error(f"❌ An unexpected error occurred: {str(e)}") 
+        st.error(f"❌ An unexpected error occurred: {str(e)}")
