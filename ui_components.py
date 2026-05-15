@@ -80,7 +80,6 @@ def render_upload_page():
             if uploaded_file:
                 # Show a compact preview/info area for the selected file
                 with col1:
-                    st.markdown("", unsafe_allow_html=True)
                     try:
                         if uploaded_file.type.startswith("image"):
                             st.image(uploaded_file, width=600, clamp=True)
@@ -88,18 +87,15 @@ def render_upload_page():
                         pass
 
                 with col2:
-                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
-                    st.markdown(f"**Filename:** {uploaded_file.name}")
-                    st.markdown(f"**Type:** {uploaded_file.type or 'N/A'}")
+                    st.markdown("**Selected File**")
+                    st.write(uploaded_file.name)
+                    st.caption(uploaded_file.type or "N/A")
                     try:
                         size_kb = round(len(uploaded_file.getvalue()) / 1024, 1)
-                        st.markdown(f"**Size:** {size_kb} KB")
+                        st.caption(f"{size_kb} KB")
                     except Exception:
                         pass
-                    st.markdown("</div>", unsafe_allow_html=True)
 
-                    # Add margin-top to button for better spacing
-                    st.markdown("<style>.stButton button { margin-top: 8px; }</style>", unsafe_allow_html=True)
                     upload_btn = st.button(
                         "Upload File", 
                         key="upload_btn",
@@ -159,19 +155,12 @@ def render_blockchain_log():
 
     stat1, stat2, stat3, stat4 = st.columns(4)
     with stat1:
-        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.metric("Total Blocks", total_blocks)
-        st.markdown("</div>", unsafe_allow_html=True)
     with stat2:
-        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.metric("Last Upload", last_ts or "—")
-        st.markdown("</div>", unsafe_allow_html=True)
     with stat3:
-        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.metric("Latest Hash", (last_block_hash[:10] + "…") if last_block_hash else "—")
-        st.markdown("</div>", unsafe_allow_html=True)
     with stat4:
-        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.markdown("**Export**")
         export_cols = st.columns(2)
         with export_cols[0]:
@@ -197,7 +186,6 @@ def render_blockchain_log():
                 )
             except Exception:
                 st.caption("CSV export unavailable")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -211,7 +199,6 @@ def render_blockchain_log():
             cols = st.columns(row_size)
             for idx, blk in enumerate(row):
                 with cols[idx]:
-                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
                     fn = blk.get('filename', blk.get('file_hash', 'file'))
                     is_image = isinstance(fn, str) and fn.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
                     if is_image:
@@ -240,7 +227,6 @@ def render_blockchain_log():
                             use_container_width=True,
                             key=f"recent_download_{blk.get('index', idx)}",
                         )
-                    st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.info("No recent uploads to show.")
 
@@ -280,10 +266,11 @@ def render_verify_page():
                 chain_ok = False
                 break
 
-        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
-        st.metric("Total Blocks", total_blocks)
-        st.metric("Chain Integrity", "Valid" if chain_ok else "Broken")
-        st.markdown("</div>", unsafe_allow_html=True)
+        metric_cols = st.columns(2)
+        with metric_cols[0]:
+            st.metric("Total Blocks", total_blocks)
+        with metric_cols[1]:
+            st.metric("Chain Integrity", "Valid" if chain_ok else "Broken")
 
     if verify_btn:
         target_hash = None
@@ -308,15 +295,11 @@ def render_verify_page():
             for match in matches:
                 info1, info2 = st.columns([1, 1])
                 with info1:
-                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
                     st.write(f"**Filename:** {match.get('filename', 'Unknown')}")
                     st.write(f"**Index:** {match.get('index', '—')}")
                     st.write(f"**Timestamp:** {match.get('timestamp', '—')}")
-                    st.markdown("</div>", unsafe_allow_html=True)
                 with info2:
-                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
                     st.code(match.get('file_hash', ''), language=None)
-                    st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.error("No matching file hash found in the blockchain.")
 

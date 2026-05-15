@@ -137,7 +137,6 @@ def fetch_and_display_blockchain_data():
                     tab1, tab2 = st.tabs(["📊 Visual Representation", "💾 Raw Data"])
 
                     with tab1:
-                        st.markdown("<div class='card'>", unsafe_allow_html=True)
                         st.subheader("Blockchain Structure")
                         blockchain_graph = create_blockchain_graph(blocks)
                         # Try rendering the graph, catch potential Graphviz errors
@@ -146,10 +145,8 @@ def fetch_and_display_blockchain_data():
                             st.caption("Each block is linked to the previous one using its hash.")
                         except Exception as graph_err:
                             st.warning(f"Could not render graph. Graphviz might not be installed correctly. Error: {graph_err}")
-                        st.markdown("</div>", unsafe_allow_html=True)
 
                     with tab2:
-                        st.markdown("<div class='card'>", unsafe_allow_html=True)
                         st.subheader("Blockchain Data Table")
                         df = pd.DataFrame(blocks)
                         # Safely format timestamp in DataFrame
@@ -170,7 +167,6 @@ def fetch_and_display_blockchain_data():
                             hide_index=True,
                             use_container_width=True
                         )
-                        st.markdown("</div>", unsafe_allow_html=True)
                 else:
                     # Show a compact, inline info message instead of a large
                     # empty card to avoid creating big blank spaces in the UI.
