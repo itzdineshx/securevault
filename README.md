@@ -31,8 +31,8 @@ Environment variables:
 
 Notes:
 
-- The repo uses SQLite by default for simplicity; for production use a managed database and set `DATABASE_URL` accordingly.
-- SQLite requires the file to be persisted between containers; the provided `docker-compose.yml` mounts a local `securevault.db`.
+- The repo uses Postgres in deployment and falls back to SQLite only if `DATABASE_URL` is not set.
+- For local Docker development, `docker-compose.yml` starts a Postgres container automatically.
 
 Deploying the backend to Render and the frontend to Streamlit Cloud
 ---------------------------------------------------------------
@@ -43,8 +43,9 @@ Deploying the backend to Render and the frontend to Streamlit Cloud
     - Create a new Web Service on Render and connect your GitHub repo.
     - Choose the "Docker" environment and point to `Dockerfile.backend`.
     - Set the following Environment Variables in Render:
-       - `DATABASE_URL` — e.g. `postgres://user:pass@hostname:5432/dbname` (recommended)
+       - `DATABASE_URL` — use the Postgres connection string from Render's managed database, typically `postgresql://user:pass@hostname:5432/dbname`
        - `CORS_ALLOW_ORIGINS` — e.g. `https://share.streamlit.io` or your Streamlit app URL
+    - Create a Render Postgres database and attach its external database URL to the web service.
     - Deploy. Render will provide a public HTTPS URL for your backend.
 
 3) Frontend (Streamlit Cloud):

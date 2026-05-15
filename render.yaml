@@ -10,6 +10,6 @@ services:
     startCommand: ""
     envVars:
       - key: DATABASE_URL
-        value: sqlite:///./securevault.db
+        sync: false
       - key: CORS_ALLOW_ORIGINS
         value: https://share.streamlit.io

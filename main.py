@@ -25,9 +25,13 @@ logger = logging.getLogger(__name__)
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads", exist_ok=True)
 
-# Database URL from environment (allows swapping SQLite for other DBs in production)
+# Database URL from environment (Postgres in deployment, SQLite as a local fallback)
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./securevault.db")
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {})
+engine_kwargs = {"pool_pre_ping": True}
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

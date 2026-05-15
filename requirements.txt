@@ -2,7 +2,8 @@ fastapi==0.95.2
 uvicorn[standard]==0.22.0
 streamlit==1.26.0
 python-multipart==0.0.6
-SQLAlchemy==2.1.0
+SQLAlchemy==2.0.30
+psycopg2-binary==2.9.9
 requests==2.31.0
 pandas==2.1.0
 python-jose==3.3.0

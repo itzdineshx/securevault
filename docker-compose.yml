@@ -1,5 +1,17 @@
 version: "3.8"
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: securevault-db
+    environment:
+      POSTGRES_DB: securevault
+      POSTGRES_USER: securevault
+      POSTGRES_PASSWORD: securevault
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: .
@@ -7,12 +19,13 @@ services:
     container_name: securevault-backend
     ports:
       - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://securevault:securevault@db:5432/securevault
+      - CORS_ALLOW_ORIGINS=http://localhost:8501
     volumes:
       - ./uploads:/app/uploads
-      - ./securevault.db:/app/securevault.db
-    environment:
-      - DATABASE_URL=sqlite:///./securevault.db
-      - CORS_ALLOW_ORIGINS=http://localhost:8501
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -25,3 +38,6 @@ services:
       - BACKEND_URL=http://backend:8000
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
