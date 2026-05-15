@@ -1,6 +1,6 @@
 import streamlit as st
 # Remove direct imports of requests, pandas, datetime, graphviz as they are now in utils/ui_components
-from ui_components import render_header, render_sidebar, render_upload_page, render_blockchain_log
+from ui_components import render_header, render_sidebar, render_upload_page, render_blockchain_log, render_verify_page
 
 # ---------- CONFIGURATION ---------- #
 def configure_page():
@@ -145,6 +145,8 @@ def main():
             render_upload_page()
         elif selected_page == "📋 Blockchain Log":
             render_blockchain_log()
+        elif selected_page == "✅ Verify File":
+            render_verify_page()
         # Add else or default case if needed
 
 if __name__ == "__main__":

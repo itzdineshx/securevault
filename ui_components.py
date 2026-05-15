@@ -24,7 +24,7 @@ def render_sidebar():
         st.subheader("Navigation")
         page = st.radio(
             "Choose a page",
-            ["📤 Upload Document", "📋 Blockchain Log"],
+            ["📤 Upload Document", "📋 Blockchain Log", "✅ Verify File"],
             label_visibility="collapsed"
         )
         
@@ -204,35 +204,86 @@ def render_blockchain_log():
     else:
         st.info("No recent uploads to show.")
 
-    st.divider()
-
-    # Verification tool
-    with st.expander("Verify file or hash", expanded=False):
-        verify_file = st.file_uploader("Upload a file to verify", type=["pdf", "jpg", "jpeg", "png", "txt"], key="verify_uploader")
-        verify_hash = st.text_input("Or paste a file hash to verify", key="verify_hash")
-        if st.button("Verify", key="verify_btn"):
-            target_hash = None
-            if verify_file is not None:
-                try:
-                    data = verify_file.getvalue()
-                    target_hash = hashlib.sha256(data).hexdigest()
-                except Exception as e:
-                    st.error(f"Could not read uploaded file: {e}")
-                    target_hash = None
-            elif verify_hash:
-                target_hash = verify_hash.strip()
-
-            if target_hash:
-                all_blocks = fetch_blocks()
-                matches = [b for b in all_blocks if b.get('file_hash') == target_hash]
-                if matches:
-                    st.success(f"Match found in {len(matches)} block(s).")
-                    for m in matches:
-                        st.write(m)
-                else:
-                    st.error("No matching file hash found in the blockchain.")
-            else:
-                st.warning("Please upload a file or provide a hash to verify.")
-
     # Finally render the graph & table using existing utility (which includes compact cards)
     fetch_and_display_blockchain_data()
+
+
+# ---------- VERIFY COMPONENT ---------- #
+def render_verify_page():
+    """Render the dedicated verification page with chain integrity and hash checks."""
+    st.header("✅ Verify File", anchor=False)
+    st.write("Verify a document against the blockchain, inspect matches, and confirm chain integrity.")
+
+    left, right = st.columns([1.2, 0.8])
+    with left:
+        verify_file = st.file_uploader(
+            "Upload a file to verify",
+            type=["pdf", "jpg", "jpeg", "png", "txt"],
+            key="verify_uploader_page",
+            help="Compare the file hash against the blockchain records."
+        )
+        verify_hash = st.text_input(
+            "Or paste a file hash",
+            key="verify_hash_page",
+            placeholder="64-character SHA-256 hash"
+        )
+        verify_btn = st.button("Verify File", key="verify_btn_page", type="primary")
+
+    with right:
+        blocks = fetch_blocks()
+        total_blocks = len(blocks)
+        chain_ok = True
+        for idx, block in enumerate(blocks):
+            if idx > 0 and block.get("previous_hash") != blocks[idx - 1].get("block_hash"):
+                chain_ok = False
+                break
+
+        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+        st.metric("Total Blocks", total_blocks)
+        st.metric("Chain Integrity", "Valid" if chain_ok else "Broken")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    if verify_btn:
+        target_hash = None
+        file_name = None
+        if verify_file is not None:
+            try:
+                data = verify_file.getvalue()
+                target_hash = hashlib.sha256(data).hexdigest()
+                file_name = verify_file.name
+            except Exception as e:
+                st.error(f"Could not read uploaded file: {e}")
+        elif verify_hash:
+            target_hash = verify_hash.strip()
+
+        if not target_hash:
+            st.warning("Please upload a file or provide a hash to verify.")
+            return
+
+        matches = [b for b in blocks if b.get("file_hash") == target_hash]
+        if matches:
+            st.success(f"Verified: match found in {len(matches)} block(s).")
+            for match in matches:
+                info1, info2 = st.columns([1, 1])
+                with info1:
+                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+                    st.write(f"**Filename:** {match.get('filename', 'Unknown')}")
+                    st.write(f"**Index:** {match.get('index', '—')}")
+                    st.write(f"**Timestamp:** {match.get('timestamp', '—')}")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                with info2:
+                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+                    st.code(match.get('file_hash', ''), language=None)
+                    st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.error("No matching file hash found in the blockchain.")
+
+        st.divider()
+        st.subheader("Verification Summary")
+        summary_cols = st.columns(3)
+        with summary_cols[0]:
+            st.metric("Input Type", "File" if verify_file is not None else "Hash")
+        with summary_cols[1]:
+            st.metric("Target Hash", (target_hash[:12] + "…") if target_hash else "—")
+        with summary_cols[2]:
+            st.metric("Source", file_name or "Manual Input")
