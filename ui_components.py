@@ -133,10 +133,10 @@ def render_blockchain_log():
     col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
         refresh_btn = st.button(
-            "🔄 Refresh Log", 
+            "🔄 Refresh Log",
             key="refresh_btn",
             help="Click to refresh the blockchain data",
-            use_container_width=False
+            use_container_width=True,
         )
     
     if refresh_btn:
@@ -148,61 +148,103 @@ def render_blockchain_log():
     # Top stats: total blocks, last upload
     total_blocks = len(blocks)
     last_ts = None
+    last_block_hash = None
     if total_blocks:
         try:
             last_ts = blocks[-1].get('timestamp')
+            last_block_hash = blocks[-1].get('block_hash')
         except Exception:
             last_ts = None
+            last_block_hash = None
 
-    c1, c2, c3 = st.columns([1, 1, 2])
-    with c1:
+    stat1, stat2, stat3, stat4 = st.columns(4)
+    with stat1:
+        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.metric("Total Blocks", total_blocks)
-    with c2:
+        st.markdown("</div>", unsafe_allow_html=True)
+    with stat2:
+        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
         st.metric("Last Upload", last_ts or "—")
-    with c3:
-        # Export buttons (JSON & CSV)
-        if st.button("Export JSON", key="export_json"):
-            st.download_button("Download JSON", data=json.dumps(blocks, default=str), file_name="blockchain.json", mime="application/json")
-        if st.button("Export CSV", key="export_csv"):
+        st.markdown("</div>", unsafe_allow_html=True)
+    with stat3:
+        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+        st.metric("Latest Hash", (last_block_hash[:10] + "…") if last_block_hash else "—")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with stat4:
+        st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+        st.markdown("**Export**")
+        export_cols = st.columns(2)
+        with export_cols[0]:
+            st.download_button(
+                "JSON",
+                data=json.dumps(blocks, default=str),
+                file_name="blockchain.json",
+                mime="application/json",
+                use_container_width=True,
+                key="download_json_btn",
+            )
+        with export_cols[1]:
             try:
                 import pandas as _pd
                 df = _pd.DataFrame(blocks)
-                st.download_button("Download CSV", data=df.to_csv(index=False), file_name="blockchain.csv", mime="text/csv")
+                st.download_button(
+                    "CSV",
+                    data=df.to_csv(index=False),
+                    file_name="blockchain.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="download_csv_btn",
+                )
             except Exception:
-                st.error("Could not export CSV (pandas missing or data malformed).")
+                st.caption("CSV export unavailable")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
     # Recent uploads strip (show thumbnails or file icons)
     recent = fetch_blocks(limit=6)
     if recent:
-        cols = st.columns(len(recent))
-        for col, blk in zip(cols, recent):
-            with col:
-                fn = blk.get('filename', blk.get('file_hash', 'file'))
-                is_image = isinstance(fn, str) and fn.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
-                if is_image:
-                    data = download_file_bytes(blk.get('file_hash'))
-                    if data:
-                        try:
-                            col.image(data, width=140)
-                        except Exception:
-                            col.write("🖼️ Image")
+        st.subheader("Recent Uploads")
+        row_size = 3
+        rows = [recent[i : i + row_size] for i in range(0, len(recent), row_size)]
+        for row in rows:
+            cols = st.columns(row_size)
+            for idx, blk in enumerate(row):
+                with cols[idx]:
+                    st.markdown("<div class='card compact'>", unsafe_allow_html=True)
+                    fn = blk.get('filename', blk.get('file_hash', 'file'))
+                    is_image = isinstance(fn, str) and fn.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
+                    if is_image:
+                        data = download_file_bytes(blk.get('file_hash'))
+                        if data:
+                            try:
+                                st.image(data, width=180)
+                            except Exception:
+                                st.write("🖼️ Image")
+                        else:
+                            st.write("🖼️ Image")
                     else:
-                        col.write("🖼️ Image")
-                else:
-                    col.write("📄")
-                col.write(fn)
-                # download button
-                file_bytes = None
-                try:
-                    file_bytes = download_file_bytes(blk.get('file_hash'))
-                except Exception:
+                        st.markdown("### 📄")
+                    st.write(fn)
+                    st.caption(f"Block #{blk.get('index', '—')}")
                     file_bytes = None
-                if file_bytes:
-                    col.download_button("Download", data=file_bytes, file_name=fn)
+                    try:
+                        file_bytes = download_file_bytes(blk.get('file_hash'))
+                    except Exception:
+                        file_bytes = None
+                    if file_bytes:
+                        st.download_button(
+                            "Download file",
+                            data=file_bytes,
+                            file_name=fn,
+                            use_container_width=True,
+                            key=f"recent_download_{blk.get('index', idx)}",
+                        )
+                    st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.info("No recent uploads to show.")
+
+    st.divider()
 
     # Finally render the graph & table using existing utility (which includes compact cards)
     fetch_and_display_blockchain_data()
