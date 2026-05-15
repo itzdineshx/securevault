@@ -90,6 +90,40 @@ def create_blockchain_graph(blocks):
             
     return dot
 
+
+def fetch_blocks(limit=None):
+    """Fetch blocks from the backend and return a list. Optionally limit results (most recent first)."""
+    try:
+        response = requests.get(f"{BACKEND_URL}/log/")
+        if response.status_code == 200:
+            blocks = response.json()
+            # Ensure blocks are sorted by index ascending; return most recent first if limiting
+            try:
+                blocks = sorted(blocks, key=lambda b: b.get('index', 0))
+            except Exception:
+                pass
+            if limit:
+                return list(reversed(blocks))[:limit]
+            return blocks
+        else:
+            return []
+    except Exception:
+        return []
+
+
+def download_file_bytes(file_hash):
+    """Attempt to download a file by its file hash from the backend.
+
+    Returns bytes if successful, otherwise None.
+    """
+    try:
+        resp = requests.get(f"{BACKEND_URL}/files/{file_hash}")
+        if resp.status_code == 200:
+            return resp.content
+    except Exception:
+        pass
+    return None
+
 def fetch_and_display_blockchain_data():
     """Fetch blockchain data and display it as a graph and a table in tabs."""
     try:

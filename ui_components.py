@@ -2,6 +2,9 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 from utils import process_upload, fetch_and_display_blockchain_data
+from utils import fetch_blocks, download_file_bytes
+import json
+import hashlib
 
 # ---------- HEADER COMPONENT ---------- #
 def render_header():
@@ -80,7 +83,7 @@ def render_upload_page():
                     st.markdown("", unsafe_allow_html=True)
                     try:
                         if uploaded_file.type.startswith("image"):
-                            st.image(uploaded_file, use_column_width=True, clamp=True)
+                            st.image(uploaded_file, width=600, clamp=True)
                     except Exception:
                         pass
 
@@ -108,7 +111,17 @@ def render_upload_page():
     # Removed the surrounding `.card` to avoid large empty space above uploader.
     
     if uploaded_file and upload_btn:
-        process_upload(uploaded_file) # Call utility function
+        # Show a compact progress indicator and notifications
+        progress = st.progress(0)
+        try:
+            progress.progress(30)
+            process_upload(uploaded_file) # Call utility function
+            progress.progress(100)
+            st.success("Upload complete — block added to the chain.")
+        except Exception as e:
+            st.error(f"Upload failed: {e}")
+        finally:
+            progress.empty()
 
 # ---------- BLOCKCHAIN LOG COMPONENT ---------- #
 def render_blockchain_log():
@@ -129,6 +142,97 @@ def render_blockchain_log():
     if refresh_btn:
         st.rerun()
 
-    # Render blockchain content (graph/table). The utility shows a compact
-    # info message when there are no blocks to avoid large empty cards.
-    fetch_and_display_blockchain_data() # Call utility function
+    # Fetch blocks for stats, recent strip, and export
+    blocks = fetch_blocks()
+
+    # Top stats: total blocks, last upload
+    total_blocks = len(blocks)
+    last_ts = None
+    if total_blocks:
+        try:
+            last_ts = blocks[-1].get('timestamp')
+        except Exception:
+            last_ts = None
+
+    c1, c2, c3 = st.columns([1, 1, 2])
+    with c1:
+        st.metric("Total Blocks", total_blocks)
+    with c2:
+        st.metric("Last Upload", last_ts or "—")
+    with c3:
+        # Export buttons (JSON & CSV)
+        if st.button("Export JSON", key="export_json"):
+            st.download_button("Download JSON", data=json.dumps(blocks, default=str), file_name="blockchain.json", mime="application/json")
+        if st.button("Export CSV", key="export_csv"):
+            try:
+                import pandas as _pd
+                df = _pd.DataFrame(blocks)
+                st.download_button("Download CSV", data=df.to_csv(index=False), file_name="blockchain.csv", mime="text/csv")
+            except Exception:
+                st.error("Could not export CSV (pandas missing or data malformed).")
+
+    st.divider()
+
+    # Recent uploads strip (show thumbnails or file icons)
+    recent = fetch_blocks(limit=6)
+    if recent:
+        cols = st.columns(len(recent))
+        for col, blk in zip(cols, recent):
+            with col:
+                fn = blk.get('filename', blk.get('file_hash', 'file'))
+                is_image = isinstance(fn, str) and fn.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
+                if is_image:
+                    data = download_file_bytes(blk.get('file_hash'))
+                    if data:
+                        try:
+                            col.image(data, width=140)
+                        except Exception:
+                            col.write("🖼️ Image")
+                    else:
+                        col.write("🖼️ Image")
+                else:
+                    col.write("📄")
+                col.write(fn)
+                # download button
+                file_bytes = None
+                try:
+                    file_bytes = download_file_bytes(blk.get('file_hash'))
+                except Exception:
+                    file_bytes = None
+                if file_bytes:
+                    col.download_button("Download", data=file_bytes, file_name=fn)
+    else:
+        st.info("No recent uploads to show.")
+
+    st.divider()
+
+    # Verification tool
+    with st.expander("Verify file or hash", expanded=False):
+        verify_file = st.file_uploader("Upload a file to verify", type=["pdf", "jpg", "jpeg", "png", "txt"], key="verify_uploader")
+        verify_hash = st.text_input("Or paste a file hash to verify", key="verify_hash")
+        if st.button("Verify", key="verify_btn"):
+            target_hash = None
+            if verify_file is not None:
+                try:
+                    data = verify_file.getvalue()
+                    target_hash = hashlib.sha256(data).hexdigest()
+                except Exception as e:
+                    st.error(f"Could not read uploaded file: {e}")
+                    target_hash = None
+            elif verify_hash:
+                target_hash = verify_hash.strip()
+
+            if target_hash:
+                all_blocks = fetch_blocks()
+                matches = [b for b in all_blocks if b.get('file_hash') == target_hash]
+                if matches:
+                    st.success(f"Match found in {len(matches)} block(s).")
+                    for m in matches:
+                        st.write(m)
+                else:
+                    st.error("No matching file hash found in the blockchain.")
+            else:
+                st.warning("Please upload a file or provide a hash to verify.")
+
+    # Finally render the graph & table using existing utility (which includes compact cards)
+    fetch_and_display_blockchain_data()
