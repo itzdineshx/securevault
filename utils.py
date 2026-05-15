@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import streamlit as st
 import requests
 from requests.exceptions import RequestException
@@ -5,7 +9,8 @@ import pandas as pd
 from datetime import datetime
 import graphviz
 
-BACKEND_URL = "http://localhost:8000" # Define backend URL constant
+# Backend URL can be injected via env for containerized deployments
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000") # Define backend URL constant
 
 
 # ---------- UPLOAD PROCESSING ---------- #
@@ -15,7 +20,7 @@ def process_upload(uploaded_file):
         files = {"file": (uploaded_file.name, uploaded_file, uploaded_file.type)}
         
         with st.spinner("Uploading and securing your document..."):
-            response = requests.post(f"{BACKEND_URL}/upload", files=files)
+            response = requests.post(f"{BACKEND_URL}/upload/", files=files)
             
             if response.status_code == 200:
                 result = response.json()
@@ -88,7 +93,7 @@ def create_blockchain_graph(blocks):
 def fetch_and_display_blockchain_data():
     """Fetch blockchain data and display it as a graph and a table in tabs."""
     try:
-        with st.spinner("Fetching blockchain data..."):
+            with st.spinner("Fetching blockchain data..."):
             response = requests.get(f"{BACKEND_URL}/log/")
             
             if response.status_code == 200:

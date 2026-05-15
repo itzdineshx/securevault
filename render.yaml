@@ -1,0 +1,15 @@
+# Example render.yaml for deploying the backend to Render using the Dockerfile
+# Update the repo and environment variables via Render dashboard as needed.
+services:
+  - type: web
+    name: securevault-backend
+    env: docker
+    plan: starter
+    dockerfilePath: Dockerfile.backend
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./securevault.db
+      - key: CORS_ALLOW_ORIGINS
+        value: https://share.streamlit.io

@@ -10,6 +10,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import json
 import logging # Import the logging library
+from dotenv import load_dotenv
+
+# Load environment variables from .env when present
+load_dotenv()
+
+# Import utilities
 from utils import process_upload, fetch_and_display_blockchain_data
 
 # Configure logging
@@ -19,9 +25,9 @@ logger = logging.getLogger(__name__)
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads", exist_ok=True)
 
-# SQLite database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./securevault.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Database URL from environment (allows swapping SQLite for other DBs in production)
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./securevault.db")
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -75,10 +81,12 @@ blockchain = Blockchain()
 
 app = FastAPI(title="Secure File Upload API")
 
-# Configure CORS
+# Configure CORS origins via environment variable (comma separated)
+cors_origins_raw = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:8501")
+cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -186,6 +194,11 @@ async def get_chain():
         "length": len(blockchain.chain)
     }
 
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/log/", response_model=List[BlockResponse])
 async def get_blockchain_log():
     return [
@@ -201,4 +214,4 @@ async def get_blockchain_log():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host=os.getenv("HOST", "0.0.0.0"), port=int(os.getenv("PORT", "8000")))

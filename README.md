@@ -1,3 +1,65 @@
+# SecureVault
+
+SecureVault is a small FastAPI backend and Streamlit frontend for secure file uploads with a simple blockchain-style audit log.
+
+Quick start (local, venv):
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+# Start backend
+.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
+# In a second terminal start the UI
+.venv/bin/streamlit run app.py
+```
+
+Run with Docker (recommended for deployment/testing):
+
+```bash
+# Build and start both services
+docker-compose up --build
+
+# Backend API: http://localhost:8000
+# Streamlit UI: http://localhost:8501
+```
+
+Environment variables:
+
+- `DATABASE_URL` — SQLAlchemy database URL (defaults to SQLite `sqlite:///./securevault.db`)
+- `CORS_ALLOW_ORIGINS` — comma-separated list of allowed CORS origins for the API (defaults to `http://localhost:8501`)
+- `BACKEND_URL` — used by the Streamlit UI and tests to locate the backend (defaults to `http://localhost:8000`)
+
+Notes:
+
+- The repo uses SQLite by default for simplicity; for production use a managed database and set `DATABASE_URL` accordingly.
+- SQLite requires the file to be persisted between containers; the provided `docker-compose.yml` mounts a local `securevault.db`.
+
+Deploying the backend to Render and the frontend to Streamlit Cloud
+---------------------------------------------------------------
+
+1) Push your repository to GitHub.
+
+2) Backend (Render):
+    - Create a new Web Service on Render and connect your GitHub repo.
+    - Choose the "Docker" environment and point to `Dockerfile.backend`.
+    - Set the following Environment Variables in Render:
+       - `DATABASE_URL` — e.g. `postgres://user:pass@hostname:5432/dbname` (recommended)
+       - `CORS_ALLOW_ORIGINS` — e.g. `https://share.streamlit.io` or your Streamlit app URL
+    - Deploy. Render will provide a public HTTPS URL for your backend.
+
+3) Frontend (Streamlit Cloud):
+    - On Streamlit Cloud, create a new app and connect the same GitHub repo.
+    - Set the "Main file" to `app.py`.
+    - In the Streamlit app settings, under "Secrets & config", add:
+       - `BACKEND_URL` = `https://<your-render-backend-url>`
+    - Deploy. Streamlit will host your UI and provide a public HTTPS URL.
+
+4) Update the Streamlit secrets or environment so the frontend points to the Render backend URL.
+
+Notes:
+- Do not commit real credentials. Use Render's dashboard to set secrets.
+- For production, use a managed Postgres instance and S3-compatible storage for `uploads`.
+- The sample `render.yaml` and `.env.example` provide templates for configuration.
 # 🔐 SecureVault 🔐
 
 <p align="center">

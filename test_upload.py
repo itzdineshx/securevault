@@ -9,7 +9,10 @@ def test_upload(file_path):
         print(f"Test file not found: {file_path}")
         return
     
-    url = "http://localhost:8000/upload/"
+    from dotenv import load_dotenv
+    load_dotenv()
+    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+    url = f"{BACKEND_URL}/upload/"
     files = {'file': open(file_path, 'rb')}
     
     try:
