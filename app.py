@@ -15,6 +15,49 @@ def configure_page():
     # CSS styles remain here as they apply globally
     st.markdown("""
         <style>
+        /* Light theme defaults (fallbacks) */
+        :root {
+            --background-color-light: #f8fafc;
+            --text-color-light: #0f172a;
+            --primary-color-light: #1e40af;
+            --card-background-light: #ffffff;
+            --border-color-light: #e6edf3;
+            --card-padding: 1.5rem;
+        }
+
+        /* Compact card variant for tighter UI */
+        .card.compact {
+            padding: 0.6rem 1rem !important;
+            margin-bottom: 0.75rem !important;
+            border-radius: 10px !important;
+        }
+
+        /* Tighter global card default */
+        .card {
+            padding: var(--card-padding) !important;
+            background-color: var(--card-background-light);
+            border: 1px solid var(--border-color-light);
+            border-radius: 12px;
+        }
+
+        /* File uploader compact style */
+        .stFileUploader {
+            max-width: 720px;
+        }
+
+        /* Improve button appearance and spacing */
+        .stButton>button {
+            background: linear-gradient(180deg, #2563eb, #1e40af) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 2px 6px rgba(16,24,40,0.2);
+            padding: 10px 14px !important;
+            border-radius: 8px !important;
+        }
+
+        /* Smaller header spacing */
+        .stApp header ~ div { padding-top: 8px !important; }
+
         /* Theme colors */
         :root {
             /* Dark Mode Overrides (applied via media query) */

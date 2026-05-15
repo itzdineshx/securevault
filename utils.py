@@ -138,9 +138,9 @@ def fetch_and_display_blockchain_data():
                         )
                         st.markdown("</div>", unsafe_allow_html=True)
                 else:
-                    st.markdown("<div class='card'>", unsafe_allow_html=True)
-                    st.info("ℹ️ No blocks in the blockchain yet.")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    # Show a compact, inline info message instead of a large
+                    # empty card to avoid creating big blank spaces in the UI.
+                    st.info("📭 No blocks in the blockchain yet. Upload a document to create the first block.")
             else:
                 try:
                     error_detail = response.json().get("detail", response.text)
